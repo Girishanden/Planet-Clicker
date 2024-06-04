@@ -1,0 +1,700 @@
+
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Planet Clicker &star;</title>
+
+    <link rel="preconnect" href="https://pc.megajaa.com">
+    <link rel="preload" href="https://pc.megajaa.com/assets/click.wav">
+    <link rel="preload" href="https://pc.megajaa.com/assets/ijksljg92uq0ijhnik2m2hn9h010-2g.webp">
+
+    <script src="https://pc.megajaa.com/src/js/jquery-3.7.1.min.js"></script>
+		<script src="https://www.megajaa.com/megajaaconsole.js"></script>
+    <script>
+      class Vector2 {
+        constructor(x = 0, y = 0) {
+          this.x = x;
+          this.y = y;
+        }
+
+        // Getters and Setters
+        get length() {
+          return Math.sqrt(this.x ** 2 + this.y ** 2);
+        }
+
+        set length(value) {
+          const angle = this.angle;
+          this.x = Math.cos(angle) * value;
+          this.y = Math.sin(angle) * value;
+        }
+
+        get angle() {
+          return Math.atan2(this.y, this.x);
+        }
+
+        set angle(value) {
+          const length = this.length;
+          this.x = Math.cos(value) * length;
+          this.y = Math.sin(value) * length;
+        }
+
+        // Instance Methods
+        add(v) {
+          return new Vector2(this.x + v.x, this.y + v.y);
+        }
+
+        subtract(v) {
+          return new Vector2(this.x - v.x, this.y - v.y);
+        }
+
+        multiply(scalar) {
+          return new Vector2(this.x * scalar, this.y * scalar);
+        }
+
+        divide(scalar) {
+          return new Vector2(this.x / scalar, this.y / scalar);
+        }
+
+        normalize() {
+          const length = this.length;
+          return new Vector2(this.x / length, this.y / length);
+        }
+
+        dot(v) {
+          return this.x * v.x + this.y * v.y;
+        }
+
+        cross(v) {
+          return this.x * v.y - this.y * v.x;
+        }
+
+        equals(v) {
+          return this.x === v.x && this.y === v.y;
+        }
+
+        clone() {
+          return new Vector2(this.x, this.y);
+        }
+
+        toArray() {
+          return [this.x, this.y];
+        }
+
+        toString() {
+          return `(${this.x}, ${this.y})`;
+        }
+      }
+
+      class Vector3 {
+        constructor(x = 0, y = 0, z = 0) {
+          this.x = x;
+          this.y = y;
+          this.z = z;
+        }
+
+        // Getters and Setters
+        get length() {
+          return Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+        }
+
+        set length(value) {
+          const angle1 = this.azimuth;
+          const angle2 = this.elevation;
+          this.x = Math.cos(angle1) * Math.cos(angle2) * value;
+          this.y = Math.sin(angle1) * Math.cos(angle2) * value;
+          this.z = Math.sin(angle2) * value;
+        }
+
+        get azimuth() {
+          return Math.atan2(this.y, this.x);
+        }
+
+        set azimuth(value) {
+          const length = this.length;
+          const elevation = this.elevation;
+          this.x = Math.cos(value) * Math.cos(elevation) * length;
+          this.y = Math.sin(value) * Math.cos(elevation) * length;
+          this.z = Math.sin(elevation) * length;
+        }
+
+        get elevation() {
+          return Math.atan2(this.z, Math.sqrt(this.x ** 2 + this.y ** 2));
+        }
+
+        set elevation(value) {
+          const length = this.length;
+          const azimuth = this.azimuth;
+          this.x = Math.cos(azimuth) * Math.cos(value) * length;
+          this.y = Math.sin(azimuth) * Math.cos(value) * length;
+          this.z = Math.sin(value) * length;
+        }
+
+        // Instance Methods
+        add(v) {
+          return new Vector3(this.x + v.x, this.y + v.y, this.z + v.z);
+        }
+
+        subtract(v) {
+          return new Vector3(this.x - v.x, this.y - v.y, this.z - v.z);
+        }
+
+        multiply(scalar) {
+          return new Vector3(this.x * scalar, this.y * scalar, this.z * scalar);
+        }
+
+        divide(scalar) {
+          return new Vector3(this.x / scalar, this.y / scalar, this.z / scalar);
+        }
+
+        normalize() {
+          const length = this.length;
+          return new Vector3(this.x / length, this.y / length, this.z / length);
+        }
+
+        dot(v) {
+          return this.x * v.x + this.y * v.y + this.z * v.z;
+        }
+
+        cross(v) {
+          return new Vector3(
+            this.y * v.z - this.z * v.y,
+            this.z * v.x - this.x * v.z,
+            this.x * v.y - this.y * v.x
+          );
+        }
+
+        equals(v) {
+          return this.x === v.x && this.y === v.y && this.z === v.z;
+        }
+
+        clone() {
+          return new Vector3(this.x, this.y, this.z);
+        }
+
+        toArray() {
+          return [this.x, this.y, this.z];
+        }
+
+        toString() {
+          return `(${this.x}, ${this.y}, ${this.z})`;
+        }
+      }
+
+      document.querySelectorAll('.bounce').forEach(function(img) {
+        img.addEventListener('animationend', function() {
+          this.classList.remove('bounce');
+        });
+      });
+    </script>
+    <style>
+      .planet {
+        width: 200px;
+      }
+
+      .bounceEffectButton {
+        cursor: pointer;
+        z-index: 1;
+        user-select: none;
+        pointer-events: all;
+        transition-duration: 0.07s;
+        transition-timing-function: ease-in-out;
+      }
+
+      .bounceEffectButton:hover, .bounceEffectButton:focus-visible, a:focus-visible .bounceEffectButton {
+        animation: bounceButton 0.25s ease-in-out fowards;
+      }
+
+      .bounceEffectButton:active, .bounceEffectButton:focus-visible, a:focus-visible .bounceEffectButton {
+        animation: bounceButton 0.25s ease-in-out forwards;
+      }
+
+      .bounce {
+        animation: bounce 0.5s ease-in-out;
+      }
+
+      @keyframes bounce {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      div[lock="center"]{
+        text-align: center;
+        max-width: 100%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        position: absolute;
+      }
+
+      div[lock="top"]{
+        text-align: center;
+        max-width: 100%;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        position: fixed;
+      }
+
+      div[lock="fixedlefttop"]{
+        left:0;
+        top:0;
+        position:fixed;
+
+      }
+
+      p, h[noblock="true"] {
+        padding: 0;
+        margin: 0;
+      }
+
+      .left {
+        position: absolute;
+        left: 0;
+      }
+
+      .right {
+        position: absolute;
+        right: 0;
+      }
+
+      .currencyCount {
+        padding-top: 12px;
+        font-family: monospace;
+      }
+
+      .devpanel {
+        border: 1px solid black;
+        width: 500px;
+        height: 250px;
+        opacity: 50%;
+      }
+
+      .shopButtonWrapper {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform:translateY(-50%);
+      }
+
+      .shopArea {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width: 80vw;
+        height: 80vh;
+        background: rgb(26,26,26);
+        z-index: 1;
+        display: none;
+      }
+
+      #shopLoad pre {
+        color: white;
+      }
+
+      .spin {
+        -webkit-animation: spin 2s linear infinite;
+        -moz-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+        mix-blend-mode: luminosity;
+      }
+
+      @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+      @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+
+      @keyframes spin { 
+        100% { 
+          -webkit-transform: rotate(360deg); 
+          transform:rotate(360deg); } 
+      }
+
+      @keyframes menuBounce {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        75% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1.2);
+        }
+      }
+      @keyframes bounceButton {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.12);
+        }
+        75% {
+          transform: scale(1.06);
+        }
+        100% {
+          transform: scale(1.1);
+        }
+      }
+      @media screen and
+      (prefers-reduced-motion: reduce), 
+      (update: slow) {
+        *, *::before, *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+
+
+    <div lock="fixedlefttop" class="devpanel" id="devpanel">
+      <div class="left">
+        <p noblock="true" class="devpanel-localStorage" id="devpanel-localStorage">noe</p>
+      </div>
+
+
+
+      <div class="right">
+        <p>Console</p>
+      </div>
+    </div>
+
+    <div lock="top">
+      <p noblock="true" class="currencyCount" id="currency"></p>
+    </div>
+
+    <div class="shopButtonWrapper">
+      <button class="shopButton">Shop</button>
+    </div>
+
+    <div class="shopArea">
+      <div id="shopLoad" lock="center">
+        <pre>Loading Shop...</pre>
+      </div>
+
+      <pre currencytext="true" style="color:white;padding-left:10px;"></pre>
+
+      <div id="shop">
+      </div>
+    </div>
+
+    <div lock="center">
+      <div class="planet-wrapper">
+
+        <img id="planet" class="planet bounceEffectButton" src="https://pc.megajaa.com/assets/ijksljg92uq0ijhnik2m2hn9h010-2g.webp">
+
+      </div>
+    </div>
+
+
+    <script type="text/javascript">
+
+
+      var currencyName = "Planets";
+
+      var config = {
+        currencyName: "G5jE9bJfm8HKfQlG",
+        currencyPerSecond: "9828OWIJF",
+      };
+
+      var currencyPerSecond = 0;
+
+      if (!localStorage.getItem(config.currencyPerSecond)) {
+        localStorage.setItem(config.currencyPerSecond, 0);
+      }
+
+      function generateRandomToken(length = 24) {
+        // Define the characters to use in the token
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        // Generate a random token
+        let token = '';
+        for (let i = 0; i < length; i++) {
+          token += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return token;
+      }
+
+      var developer = true;
+
+
+
+      document.addEventListener('updateLocalStorageDisplay',function(event){
+        $("#devpanel-localStorage").text(JSON.parse(event));
+      });
+
+
+
+
+
+
+      if(developer){
+        $(document).on('keydown', function(event) {
+          if (event.key === '`' || event.which === 192) {
+            // Backtick key was pressed
+            eval(prompt('Enter Line'));
+          }
+        });
+
+        $("#devpanel").show();
+
+      }else{
+        $("#devpanel").hide();
+      }
+
+      if(!localStorage.getItem(config.currencyName)){
+        localStorage.setItem(config.currencyName,0);
+      }
+
+      var Game = (function(){
+        function getCurrency() {
+          if(localStorage.getItem(config.currencyName)){
+            return localStorage.getItem(config.currencyName);
+          }else{
+            return 0;
+          }
+        }
+
+        return {
+          getCurrency: getCurrency,
+        };
+      })();
+
+      function oneSecond() {
+
+
+        if(typeof localStorage.getItem(config.currencyName) !== "undefined"){
+localStorage.setItem(config.currencyName,parseFloat(localStorage.getItem(config.currencyName))+parseFloat(localStorage.getItem(config.currencyPerSecond)));
+        }
+        
+
+        setTimeout(oneSecond,1000);
+      }
+
+      oneSecond();
+      var updateHighlight = false;
+
+      function tick() {
+        // Update the currency display
+        $("#currency").text(`Currency: ${parseFloat(localStorage.getItem(config.currencyName)).toLocaleString()}`);
+
+        var currencyPerSecond = localStorage.getItem(config.currencyPerSecond) ? localStorage.getItem(config.currencyPerSecond) : 0;
+
+        // Get the localStorage data
+        var keys = Object.keys(localStorage);
+        var localStorageData = [];
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          var value = localStorage.getItem(key);
+          localStorageData.push({ key: key, value: value });
+        }
+
+        // Dispatch a custom event to notify the page that the localStorage data is ready
+        var event = new CustomEvent('localStorageDataReady', { detail: localStorageData });
+        document.dispatchEvent(event);
+
+        $("body [currencytext='true']").text(`${currencyName}: ${Math.floor(localStorage.getItem(config.currencyName).toLocaleString())}`);
+
+        if(updateHighlight){
+          $(".highlight-price").each(function(){
+            var has = parseFloat(localStorage.getItem(config.currencyName));
+            var mine = parseFloat($(this).attr("data-cost"));
+
+            if(mine<=has){
+              $(this).css("color","green");
+            }else{
+              $(this).css("color","red");
+            }
+          });
+        }
+
+        // Request the next animation frame
+        requestAnimationFrame(tick);
+      }
+
+      // Add an event listener to handle the localStorageDataReady event
+      document.addEventListener('localStorageDataReady', function(event) {
+        var localStorageData = event.detail;
+
+        // Clear the previous display
+        $("#devpanel-localStorage").empty();
+
+        // Create an HTML table to display the localStorage data
+        var table = document.createElement('table');
+        var tbody = document.createElement('tbody');
+
+        // Add a row for each key-value pair
+        localStorageData.forEach(function(item) {
+          var row = document.createElement('tr');
+          var keyCell = document.createElement('td');
+          var valueCell = document.createElement('td');
+          keyCell.textContent = item.key;
+          valueCell.textContent = item.value;
+          row.appendChild(keyCell);
+          row.appendChild(valueCell);
+          tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        $("#devpanel-localStorage").append(table);
+      });
+
+      // Start the tick function
+      requestAnimationFrame(tick);
+
+      function noShorthandPlusMinus(str){
+        var thing = "";
+
+        switch(str){
+          case "+":
+            thing = "Adds";
+            break;
+
+          case "-":
+            thing = "Removes";
+            break;
+        }
+
+        return thing;
+      }
+
+      function handleGives(json) {
+        var increment = 0;
+        var decrement = 0;
+        var out;
+
+        if(json.type=="gives_ps"){
+          //localStorage.setItem(config.currencyPerSecond,parseFloat(localStorage.getItem(config.currencyPerSecond)));
+
+          if(json.value.charAt(0)=="+"){
+            increment = parseFloat(json.value.replace("+",""));
+          }
+
+          if(json.value.charAt(0)=="-"){
+            decrement = parseFloat(json.value.replace("-",""));
+          }
+
+          localStorage.setItem(config.currencyPerSecond,parseFloat(localStorage.getItem(config.currencyPerSecond)+increment));
+          localStorage.setItem(config.currencyPerSecond,parseFloat(localStorage.getItem(config.currencyPerSecond)-decrement));
+        }
+      }
+
+      function colorPriceTag(cost){
+        if(parseFloat(cost)<=parseFloat(localStorage.getItem(config.currencyName))){
+          return "color:green;";
+        }else{
+          return "color:red;";
+        }
+      }
+
+      var openShop = false;
+      var didShopLoad = false;
+
+
+
+      $(document).ready(function(){
+        $("#planet").click(function(){
+          localStorage.setItem(config.currencyName,parseFloat(localStorage.getItem(config.currencyName))+1);
+          var base64Audio = "https://pc.megajaa.com/assets/click.wav";
+          var audio = new Audio(base64Audio);
+          audio.play();
+        });
+
+        var shopJson;
+
+        $(".shopButton").click(function(){
+          $(".shopArea").show();
+
+          if(openShop==false){
+
+           if(!didShopLoad){
+             $.get(`https://pc.megajaa.com/shop/download.php`, function(response){
+               $("#shopLoad").hide();
+
+               shopJson = response;
+               var json = shopJson;
+
+               for (let i = 0; i < json.length; i++) {
+                 var html = $(`<div style="width:200px;height:150px;background:rgb(50,50,50);">
+             <div style="text-align:center;">
+             <h1 style="font-size:20px;margin:0;padding:2px;color:white;font-family:monospace;">${response[i]["name"]}</h1>
+             <p style="font-size:10px;margin:0;padding:2px;color:white;font-family:monospace;">
+             Cost: <span style="font-weight:bold;${colorPriceTag(response[i]["cost"])}">${response[i]["cost"]}</span></p>
+             <p style="text-align:center;padding:2px;margin:0;color:white;font-family:monospace;font-size:10px;">${response[i]["gives_ctx"]}</p>
+             <button class="shopItemButton" data-name="${response[i]['name']}" data-cost="${response[i]['cost']}" data-act="${response[i]["givesV2"]}">Buy</button>
+             </div>
+             </div>`);
+
+                 $("#shop").append(html);
+               }
+
+               $(".shopItemButton").each(function(){
+                 $(this).click(function(){
+                   if(parseFloat(localStorage.getItem(config.currencyName))>=parseFloat($(this).attr("data-cost"))){
+                     var self = $(this);
+                     eval($(this).attr('data-act'));
+
+                     
+                     localStorage.setItem(config.currencyName,parseFloat(localStorage.getItem(config.currencyName)-parseFloat($(self).attr("data-cost"))));
+                   }
+                 });
+               });
+             });
+             openShop = true;
+             didShopLoad = true;
+           }else{
+             for (let i = 0; i < shopJson.length; i++) {
+                  var html = $(`<div style="width:200px;height:150px;background:rgb(50,50,50);">
+              <div style="text-align:center;">
+              <h1 style="font-size:20px;margin:0;padding:2px;color:white;font-family:monospace;">${shopJson[i]["name"]}</h1>
+              <p style="font-size:10px;margin:0;padding:2px;color:white;font-family:monospace;">
+              Cost: <span class="highlight-price" data-cost="${shopJson[i]["cost"]}" style="font-weight:bold;${colorPriceTag(shopJson[i]["cost"])}">${shopJson[i]["cost"]}</span></p>
+              <p style="text-align:center;padding:2px;margin:0;color:white;font-family:monospace;font-size:10px;">${shopJson[i]["gives_ctx"]}</p>
+              <button class="shopItemButton" data-name="${shopJson[i]['name']}" data-cost="${shopJson[i]['cost']}" data-act="${shopJson[i]["givesV2"]}">Buy</button>
+              </div>
+              </div>`);
+
+              $("#shop").append(html);
+
+               updateHighlight = true;
+
+               $(".shopItemButton").each(function(){
+                  $(this).click(function(){
+                    if(parseFloat(localStorage.getItem(config.currencyName))>=parseFloat($(this).attr("data-cost"))){
+                      var self = $(this);
+                      eval($(this).attr('data-act'));
+           
+                      localStorage.setItem(config.currencyName,parseFloat(localStorage.getItem(config.currencyName)-parseFloat($(self).attr("data-cost"))));
+                    }
+                  });
+                });
+
+      openShop = true;
+           }
+      }
+          }else{
+            $(".shopArea").hide();
+            $("#shop").empty();
+            openShop = false;
+          }
+
+        });
+      });
+    </script>
+
+  </body>
+</html>
